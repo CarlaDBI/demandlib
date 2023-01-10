@@ -19,36 +19,67 @@ import pandas as pd
 
 from demandlib.tools import add_weekdays2df
 
+"""
+Parameters
+----------
+year : int
+    year for which the profile is created
 
+Attributes
+----------
+
+temperature : pandas.Series
+    Series containing hourly temperature data
+annual_heat_demand : float
+    annual heat demand of building in kWh
+building_class: int
+    class of building according to bdew classification
+    possible numbers are: 1 - 11
+shlp_type : string
+    type of standardized heat load profile according to bdew
+    possible types are:
+    GMF, GPD, GHD, GWA, GGB, EFH, GKO, MFH, GBD, GBA, GMK, GBH, GGA, GHA
+wind_class : int
+    wind classification for building location (0=not windy or 1=windy)
+
+
+**kwargs
+ww_incl : boolean
+    decider whether warm water load is included in the heat load profile
+datapath : string
+    path to the bdew basic data files (csv)
+
+"""
 class HeatBuilding:
-    """
-    Parameters
-    ----------
-    year : int
-        year for which the profile is created
+    def __init__(self, df_index: pd.DatetimeIndex, temperature: pd.Series, annual_heat_demand: float, building_class: int,
+                 shlp_type: str, wind_class: int, **kwargs):
+        """
+        Initialize the slp-class for a specific building
 
-    Attributes
-    ----------
-    datapath : string
-        path to the bdew basic data files (csv)
-    temperature : pandas.Series
-        Series containing hourly temperature data
-    annual_heat_demand : float
-        annual heat demand of building in kWh
-    building_class: int
-        class of building according to bdew classification
-        possible numbers are: 1 - 11
-    shlp_type : string
-        type of standardized heat load profile according to bdew
-        possible types are:
-        GMF, GPD, GHD, GWA, GGB, EFH, GKO, MFH, GBD, GBA, GMK, GBH, GGA, GHA
-    wind_class : int
-        wind classification for building location (0=not windy or 1=windy)
-    ww_incl : boolean
-        decider whether warm water load is included in the heat load profile
-    """
+        Args:
+            df_index: pd.DatetimeIndex
+            temperature: pandas.Series
+                    Series containing hourly temperature data
+            annual_heat_demand: float
+                    annual heat demand of building in kWh
+            building_class: int
+                    class of building according to bdew classification
+                    possible numbers are: 1 - 11
+            shlp_type: string
+                    type of standardized heat load profile according to bdew
+                    possible types are:
+                    GMF, GPD, GHD, GWA, GGB, EFH, GKO, MFH, GBD, GBA, GMK, GBH, GGA, GHA
+            wind_class: int
+                    wind classification for building location (0=not windy or 1=windy)
 
-    def __init__(self, df_index, **kwargs):
+            **kwargs:
+            ww_incl : boolean
+                decider whether warm water load is included in the heat load profile
+            datapath : string
+                path to the bdew basic data files (csv)
+            name : string
+                custom name for class
+        """
         self.datapath = kwargs.get(
             "datapath", os.path.join(os.path.dirname(__file__), "bdew_data")
         )
@@ -57,15 +88,15 @@ class HeatBuilding:
             self.df, holiday_is_sunday=True, holidays=kwargs.get("holidays")
         )
         self.df["hour"] = self.df.index.hour + 1  # hour of the day
-        self.temperature = kwargs.get("temperature")
-        self.annual_heat_demand = kwargs.get("annual_heat_demand")
-        self.shlp_type = kwargs.get("shlp_type").upper()
-        self.wind_class = kwargs.get("wind_class")
-        self.building_class = kwargs.get("building_class", 0)
+        self.temperature = temperature
+        self.annual_heat_demand = annual_heat_demand
+        self.shlp_type = shlp_type.upper()
+        self.wind_class = wind_class
+        self.building_class = building_class
         self.ww_incl = kwargs.get("ww_incl", True)
         self.name = kwargs.get("name", self.shlp_type)
 
-    def weighted_temperature(self, how="geometric_series"):
+    def weighted_temperature(self, how: str ="geometric_series"):
         r"""
         A new temperature vector is generated containing a multi-day
         average temperature as needed in the load profile function.
@@ -105,11 +136,11 @@ class HeatBuilding:
 
         if how == "geometric_series":
             temperature_mean = (
-                temperature
-                + 0.5 * np.roll(temperature, 24)
-                + 0.25 * np.roll(temperature, 48)
-                + 0.125 * np.roll(temperature, 72)
-            ) / 1.875
+                                   temperature
+                                   + 0.5 * np.roll(temperature, 24)
+                                   + 0.25 * np.roll(temperature, 48)
+                                   + 0.125 * np.roll(temperature, 72)
+                               ) / 1.875
         elif how == "mean":
             temperature_mean = temperature
         else:
