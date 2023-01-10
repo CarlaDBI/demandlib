@@ -19,37 +19,6 @@ import pandas as pd
 
 from demandlib.tools import add_weekdays2df
 
-"""
-Parameters
-----------
-year : int
-    year for which the profile is created
-
-Attributes
-----------
-
-temperature : pandas.Series
-    Series containing hourly temperature data
-annual_heat_demand : float
-    annual heat demand of building in kWh
-building_class: int
-    class of building according to bdew classification
-    possible numbers are: 1 - 11
-shlp_type : string
-    type of standardized heat load profile according to bdew
-    possible types are:
-    GMF, GPD, GHD, GWA, GGB, EFH, GKO, MFH, GBD, GBA, GMK, GBH, GGA, GHA
-wind_class : int
-    wind classification for building location (0=not windy or 1=windy)
-
-
-**kwargs
-ww_incl : boolean
-    decider whether warm water load is included in the heat load profile
-datapath : string
-    path to the bdew basic data files (csv)
-
-"""
 class HeatBuilding:
     def __init__(self, df_index: pd.DatetimeIndex, temperature: pd.Series, annual_heat_demand: float, building_class: int,
                  shlp_type: str, wind_class: int, **kwargs):
